@@ -1,42 +1,43 @@
-Here is a Python Flask API code that satisfies the given user story:
+Sure! Here's an example of a Python Flask API code that handles the user story you provided:
 
 ```python
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Loan application form route
-@app.route('/loan-application', methods=['POST'])
-def loan_application():
-    # Get loan application data from the request
-    loan_application_data = request.json
+# In-memory storage for loan applications
+loan_applications = []
 
-    # Process loan application data
-    # ...
+@app.route('/apply', methods=['POST'])
+def apply_loan():
+    data = request.json
 
-    # Return a confirmation or acknowledgment of the loan application submission
+    # Validate incoming request data
+    if not all(key in data for key in ['personal_details', 'income_details', 'employment_details']):
+        return jsonify({'error': 'Invalid request data.'}), 400
+
+    # Save the loan application
+    loan_applications.append(data)
+
+    # Send confirmation to the customer
     return jsonify({'message': 'Loan application submitted successfully.'}), 200
 
-# Loan application status route
-@app.route('/loan-application/status', methods=['GET'])
-def loan_application_status():
-    # Get loan application status data from the request
-    application_id = request.args.get('application_id')
+@app.route('/status/<loan_id>', methods=['GET'])
+def get_loan_status(loan_id):
+    # Search for the loan application with the given ID
+    for loan_application in loan_applications:
+        if loan_application.get('loan_id') == loan_id:
+            return jsonify({'status': loan_application.get('status')}), 200
 
-    # Get loan application status from the database
-    # ...
-
-    # Return loan application status
-    return jsonify({'status': 'Approved'}), 200
+    # Loan application not found
+    return jsonify({'error': 'Loan application not found.'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
 ```
 
-This code sets up two routes for the loan application process:
+This code sets up a Flask API with two routes. The `/apply` route accepts POST requests to submit a new loan application. The request data should contain the necessary information (personal details, income details, and employment details). The loan application is saved in an in-memory storage (list).
 
-1. `/loan-application` - This route handles the submission of the loan application form. It expects a JSON payload containing the necessary information for the loan application. It processes the data and returns a confirmation or acknowledgment of the loan application submission.
+The `/status/<loan_id>` route accepts GET requests to retrieve the status of a loan application. The loan_id is used to search for the corresponding loan application in the storage. If found, the status is returned; otherwise, an error message is returned.
 
-2. `/loan-application/status` - This route allows the customer to track the status of their loan application. It expects an `application_id` as a query parameter and retrieves the application status from the database. It then returns the status of the loan application.
-
-Please note that this is a basic implementation and will require further development and integration with a database and other necessary functionalities according to your specific requirements.
+Please note that this is a simplified example and doesn't cover all the acceptance criteria. You would need to further develop and customize the code to meet all the requirements of your specific user story.
