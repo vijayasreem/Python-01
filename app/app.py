@@ -1,54 +1,38 @@
-Here's an example of Python Flask API code that implements the given user story:
+Here's an example of a Python Flask API code that can be used for the given user story:
 
 ```python
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-@app.route('/credit_check', methods=['POST'])
-def credit_check():
-    # Get applicant's credit score and financial history from request data
-    credit_score = request.json['credit_score']
-    financial_history = request.json['financial_history']
-    
-    # Perform credit check and determine creditworthiness
-    creditworthiness = perform_credit_check(credit_score, financial_history)
-    
-    # Update pre-qualification status in the system
-    update_prequalification_status(creditworthiness)
-    
-    return jsonify({'creditworthiness': creditworthiness})
+@app.route('/apply', methods=['POST'])
+def apply_loan():
+    data = request.get_json()
 
-@app.route('/prequalification', methods=['POST'])
-def prequalification():
-    # Get applicant's debt-to-income ratio from request data
-    debt_to_income_ratio = request.json['debt_to_income_ratio']
-    
-    # Calculate maximum loan amount and interest rate range
-    max_loan_amount = calculate_max_loan_amount(debt_to_income_ratio)
-    interest_rate_range = calculate_interest_rate_range(max_loan_amount)
-    
-    return jsonify({'max_loan_amount': max_loan_amount, 'interest_rate_range': interest_rate_range})
+    # Validate and process the loan application data
 
-def perform_credit_check(credit_score, financial_history):
-    # Perform credit check logic here
-    # Return creditworthiness based on credit score and financial history
-    return creditworthiness
+    # Example validation: Check if all required fields are present
+    required_fields = ['name', 'email', 'phone', 'income', 'car_details']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({'error': f'Missing field: {field}'}), 400
 
-def update_prequalification_status(creditworthiness):
-    # Update pre-qualification status in the system logic here
-    pass
+    # Example processing: Save the application data to a database
+    # ...
 
-def calculate_max_loan_amount(debt_to_income_ratio):
-    # Calculate maximum loan amount logic here
-    return max_loan_amount
-
-def calculate_interest_rate_range(max_loan_amount):
-    # Calculate interest rate range logic here
-    return interest_rate_range
+    # Return a success response
+    return jsonify({'message': 'Loan application submitted successfully'}), 200
 
 if __name__ == '__main__':
     app.run()
 ```
 
-This code defines two routes `/credit_check` and `/prequalification` which handle the credit check and pre-qualification processes respectively. The credit check route accepts the applicant's credit score and financial history, performs the credit check, updates the pre-qualification status, and returns the creditworthiness. The pre-qualification route accepts the applicant's debt-to-income ratio, calculates the maximum loan amount, and returns the maximum loan amount and interest rate range. The actual logic for credit check, pre-qualification, and updating the pre-qualification status is not implemented and needs to be filled in according to the specific requirements.
+This code sets up a Flask API with a single endpoint `/apply` that accepts POST requests for submitting a loan application. The loan application data is expected to be sent in the request body as a JSON object.
+
+In this example code, the loan application data is validated by checking if all the required fields are present. You can customize the validation logic based on your specific requirements.
+
+Once the data is validated, you can process the loan application data, such as saving it to a database.
+
+The API returns a JSON response with a success message if the loan application is submitted successfully. If any validation errors are encountered, an error message is returned with a 400 status code.
+
+Note: This is a basic example to demonstrate the structure of a Flask API for the given user story. You may need to customize and enhance the code based on your specific requirements and implementation details.
