@@ -1,43 +1,54 @@
-Sure! Here's an example of a Python Flask API code that handles the user story you provided:
+Here's an example of Python Flask API code that implements the given user story:
 
 ```python
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# In-memory storage for loan applications
-loan_applications = []
+@app.route('/credit_check', methods=['POST'])
+def credit_check():
+    # Get applicant's credit score and financial history from request data
+    credit_score = request.json['credit_score']
+    financial_history = request.json['financial_history']
+    
+    # Perform credit check and determine creditworthiness
+    creditworthiness = perform_credit_check(credit_score, financial_history)
+    
+    # Update pre-qualification status in the system
+    update_prequalification_status(creditworthiness)
+    
+    return jsonify({'creditworthiness': creditworthiness})
 
-@app.route('/apply', methods=['POST'])
-def apply_loan():
-    data = request.json
+@app.route('/prequalification', methods=['POST'])
+def prequalification():
+    # Get applicant's debt-to-income ratio from request data
+    debt_to_income_ratio = request.json['debt_to_income_ratio']
+    
+    # Calculate maximum loan amount and interest rate range
+    max_loan_amount = calculate_max_loan_amount(debt_to_income_ratio)
+    interest_rate_range = calculate_interest_rate_range(max_loan_amount)
+    
+    return jsonify({'max_loan_amount': max_loan_amount, 'interest_rate_range': interest_rate_range})
 
-    # Validate incoming request data
-    if not all(key in data for key in ['personal_details', 'income_details', 'employment_details']):
-        return jsonify({'error': 'Invalid request data.'}), 400
+def perform_credit_check(credit_score, financial_history):
+    # Perform credit check logic here
+    # Return creditworthiness based on credit score and financial history
+    return creditworthiness
 
-    # Save the loan application
-    loan_applications.append(data)
+def update_prequalification_status(creditworthiness):
+    # Update pre-qualification status in the system logic here
+    pass
 
-    # Send confirmation to the customer
-    return jsonify({'message': 'Loan application submitted successfully.'}), 200
+def calculate_max_loan_amount(debt_to_income_ratio):
+    # Calculate maximum loan amount logic here
+    return max_loan_amount
 
-@app.route('/status/<loan_id>', methods=['GET'])
-def get_loan_status(loan_id):
-    # Search for the loan application with the given ID
-    for loan_application in loan_applications:
-        if loan_application.get('loan_id') == loan_id:
-            return jsonify({'status': loan_application.get('status')}), 200
-
-    # Loan application not found
-    return jsonify({'error': 'Loan application not found.'}), 404
+def calculate_interest_rate_range(max_loan_amount):
+    # Calculate interest rate range logic here
+    return interest_rate_range
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
 ```
 
-This code sets up a Flask API with two routes. The `/apply` route accepts POST requests to submit a new loan application. The request data should contain the necessary information (personal details, income details, and employment details). The loan application is saved in an in-memory storage (list).
-
-The `/status/<loan_id>` route accepts GET requests to retrieve the status of a loan application. The loan_id is used to search for the corresponding loan application in the storage. If found, the status is returned; otherwise, an error message is returned.
-
-Please note that this is a simplified example and doesn't cover all the acceptance criteria. You would need to further develop and customize the code to meet all the requirements of your specific user story.
+This code defines two routes `/credit_check` and `/prequalification` which handle the credit check and pre-qualification processes respectively. The credit check route accepts the applicant's credit score and financial history, performs the credit check, updates the pre-qualification status, and returns the creditworthiness. The pre-qualification route accepts the applicant's debt-to-income ratio, calculates the maximum loan amount, and returns the maximum loan amount and interest rate range. The actual logic for credit check, pre-qualification, and updating the pre-qualification status is not implemented and needs to be filled in according to the specific requirements.
