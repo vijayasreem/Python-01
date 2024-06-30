@@ -1,38 +1,48 @@
-Here's an example of a Python Flask API code that can be used for the given user story:
+Here is an example of Python Flask API code that implements the given user story:
 
 ```python
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-@app.route('/apply', methods=['POST'])
-def apply_loan():
-    data = request.get_json()
+part_data = {
+    'part_id': 1,
+    'part_name': 'Part A',
+    'part_description': 'Description of Part A'
+}
 
-    # Validate and process the loan application data
+@app.route('/part', methods=['GET'])
+def get_part():
+    return jsonify(part_data)
 
-    # Example validation: Check if all required fields are present
-    required_fields = ['name', 'email', 'phone', 'income', 'car_details']
-    for field in required_fields:
-        if field not in data:
-            return jsonify({'error': f'Missing field: {field}'}), 400
+@app.route('/part', methods=['PUT'])
+def update_part():
+    if 'edit_mode' not in request.json:
+        return jsonify({'error': 'edit_mode is required'}), 400
 
-    # Example processing: Save the application data to a database
-    # ...
+    edit_mode = request.json['edit_mode']
 
-    # Return a success response
-    return jsonify({'message': 'Loan application submitted successfully'}), 200
+    if edit_mode:
+        if 'part_name' not in request.json or 'part_description' not in request.json:
+            return jsonify({'error': 'part_name and part_description are required'}), 400
+
+        part_data['part_name'] = request.json['part_name']
+        part_data['part_description'] = request.json['part_description']
+
+        return jsonify({'message': 'Part updated successfully'})
+
+    return jsonify({'error': 'Invalid edit_mode value'}), 400
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
 ```
 
-This code sets up a Flask API with a single endpoint `/apply` that accepts POST requests for submitting a loan application. The loan application data is expected to be sent in the request body as a JSON object.
+In this code, we define two routes: `/part` for getting and updating the part data. 
 
-In this example code, the loan application data is validated by checking if all the required fields are present. You can customize the validation logic based on your specific requirements.
+The `GET` request to `/part` returns the current part data in JSON format.
 
-Once the data is validated, you can process the loan application data, such as saving it to a database.
+The `PUT` request to `/part` is used to update the part data. It expects a JSON payload with an `edit_mode` field indicating whether the form is in edit mode or not. If `edit_mode` is `True`, it expects `part_name` and `part_description` fields to be present in the payload. The existing part data is then updated with the new values. If `edit_mode` is `False` or not provided, an error response is returned.
 
-The API returns a JSON response with a success message if the loan application is submitted successfully. If any validation errors are encountered, an error message is returned with a 400 status code.
+The code also includes basic error handling and validation for the required fields.
 
-Note: This is a basic example to demonstrate the structure of a Flask API for the given user story. You may need to customize and enhance the code based on your specific requirements and implementation details.
+Please note that this is a simplified example and you may need to modify it to fit your specific requirements.
