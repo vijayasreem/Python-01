@@ -1,5 +1,5 @@
 ```python
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_required, current_user
 import requests
@@ -40,55 +40,49 @@ def get_documents(loan_application_id):
     if not current_user.is_loan_officer:
         return jsonify({'error': 'Unauthorized access'}), 403
     documents = Document.query.filter_by(loan_application_id=loan_application_id).all()
-    return jsonify([{
-        'id': doc.id,
-        'document_type': doc.document_type,
-        'upload_date': doc.upload_date,
-        'status': doc.status,
-        'comments': doc.comments,
-        'verification_result': doc.verification_result
-    } for doc in documents])
+    return render_template('documents.html', documents=documents)
 
-@app.route('/documents/<int:document_id>/verify', methods=['POST'])
+@app.route('/verify_document/<int:document_id>', methods=['POST'])
 @login_required
 def verify_document(document_id):
     if not current_user.is_loan_officer:
         return jsonify({'error': 'Unauthorized access'}), 403
+    document = Document.query.get_or_404(document_id)
     data = request.json
-    document = Document.query.get(document_id)
-    document.status = data.get('status', document.status)
-    document.comments = data.get('comments', document.comments)
+    document.status = data.get('status')
+    document.comments = data.get('comments')
     db.session.commit()
+    update_loan_application_status(document.loan_application_id)
     return jsonify({'message': 'Document updated successfully'})
 
-@app.route('/documents/<int:document_id>/automate_verify', methods=['POST'])
-@login_required
-def automate_verify_document(document_id):
-    if not current_user.is_loan_officer:
-        return jsonify({'error': 'Unauthorized access'}), 403
-    document = Document.query.get(document_id)
-    response = requests.post('https://third-party-verification-service.com/verify', json={'document': document})
-    verification_result = response.json().get('result')
-    document.verification_result = verification_result
-    db.session.commit()
-    return jsonify({'verification_result': verification_result})
-
-@app.route('/loan_applications/<int:loan_application_id>/update_status', methods=['POST'])
-@login_required
 def update_loan_application_status(loan_application_id):
+    documents = Document.query.filter_by(loan_application_id=loan_application_id).all()
+    statuses = [doc.status for doc in documents]
+    if all(status == 'verified' for status in statuses):
+        status = 'verified'
+    elif any(status == 'rejected' for status in statuses):
+        status = 'rejected'
+    else:
+        status = 'pending'
+    loan_application = LoanApplication.query.get(loan_application_id)
+    loan_application.status = status
+    db.session.commit()
+    notify_customer(loan_application.customer_email, status)
+
+def notify_customer(email, status):
+    # Placeholder for email or in-app notification logic
+    pass
+
+@app.route('/automated_verification/<int:document_id>', methods=['POST'])
+@login_required
+def automated_verification(document_id):
     if not current_user.is_loan_officer:
         return jsonify({'error': 'Unauthorized access'}), 403
-    loan_application = LoanApplication.query.get(loan_application_id)
-    documents = Document.query.filter_by(loan_application_id=loan_application_id).all()
-    if all(doc.status == 'verified' for doc in documents):
-        loan_application.status = 'verified'
-    elif any(doc.status == 'rejected' for doc in documents):
-        loan_application.status = 'rejected'
-    else:
-        loan_application.status = 'pending'
+    document = Document.query.get_or_404(document_id)
+    verification_result = requests.post('https://third-party-verification-service.com/verify', json={'document': document})
+    document.verification_result = verification_result.json().get('result')
     db.session.commit()
-    # Notify customer via email or in-app notification
-    return jsonify({'message': 'Loan application status updated'})
+    return jsonify({'message': 'Automated verification completed', 'result': document.verification_result})
 
 if __name__ == '__main__':
     db.create_all()
